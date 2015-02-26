@@ -1,5 +1,21 @@
-var gulp = require('gulp');
+'use strict';
 
-gulp.task('default', function() {
-  // place code for your default task here
+var gulp   = require('gulp');
+var jshint = require('gulp-jshint');
+
+var jsFiles = [
+  'crawl.js',
+  'gulpfile.js'
+];
+
+gulp.task('lint', function() {
+  return gulp.src(jsFiles)
+    .pipe(jshint())
+    .pipe(jshint.reporter('default'));
 });
+
+gulp.task('watch', function() {
+  return gulp.watch(jsFiles, ['lint']);
+});
+
+gulp.task('default', ['lint']);
