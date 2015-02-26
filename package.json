@@ -8,6 +8,8 @@
     "url": "http://ericheikes.com/"
   },
   "dependencies": {
+    "each-async": "^1.1.1",
+    "x-ray": "^1.0.3"
   },
   "devDependencies": {
     "gulp": "^3.8.11",
