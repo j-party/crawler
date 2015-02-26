@@ -1,0 +1,22 @@
+{
+  "name": "jparty-crawler",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Eric Heikes",
+    "url": "http://ericheikes.com/"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "gulp": "^3.8.11"
+  },
+  "main": "crawl.js",
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {
+    "test": "gulp test"
+  }
+}
