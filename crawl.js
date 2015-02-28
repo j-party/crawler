@@ -1,7 +1,8 @@
 'use strict';
 
-var async = require('async');
-var xray  = require('x-ray');
+var async   = require('async');
+var cheerio = require('cheerio');
+var xray    = require('x-ray');
 
 var urlRoot  = 'http://j-archive.com/';
 var reqLimit = 1;
@@ -23,6 +24,48 @@ function rebaseUrl(newUrl, originalUrl) {
   return newUrl;
 }
 
+// Extracts the correct response from the "toggle(...)" JS.
+function extractAnswer(toggleJs) {
+  // Parse the JS string, and extract the HTML response.
+  var matches = toggleJs.match(/toggle\(.*?,.*?,\s*['"](.*?)['"]\)/);
+  var html = matches[1];
+
+  // Fix up the escaped quotes.
+  html = html.replace(/\\"/g, '"');
+  html = html.replace(/\\'/g, '\'');
+
+  // Load the HTML into Cheerio for more parsing.
+  var $ = cheerio.load(html);
+
+  // Return the actual answer.
+  return $('.correct_response').text();
+}
+
+function addFinalClue(name, clue, answer) {
+  console.log('adding FJ clue:', name, clue, answer);
+}
+
+function crawlEpisode(url, done) {
+  xray(url)
+    .select({
+      boards: ['.round[html]'],
+      final: {
+        $root: '.final_round',
+        name: '.category_name',
+        clue: '.clue_text',
+        mouseover: 'div[onmouseover]'
+      }
+    })
+    .run(function(err, data) {
+      addFinalClue(
+        data.final.name,
+        data.final.clue,
+        extractAnswer(data.final.mouseover)
+      );
+      done();
+    });
+}
+
 function crawlSeason(url, done) {
   function isSeasonPage(href) {
     return href.search(/(^|\/)showseason\.php/) > -1;
@@ -32,8 +75,7 @@ function crawlSeason(url, done) {
     .prepare('fixHref', function(href) { return rebaseUrl(href, url); })
     .select(['#content table a[href] | fixHref'])
     .run(function(err, episodeUrls) {
-      console.log('crawled season', url);
-      done();
+      async.eachLimit(episodeUrls, reqLimit, crawlEpisode, done);
     });
 }
 
