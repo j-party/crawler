@@ -1,7 +1,10 @@
-var each = require('each-async');
-var xray = require('x-ray');
+'use strict';
 
-var urlRoot = 'http://j-archive.com/';
+var async = require('async');
+var xray  = require('x-ray');
+
+var urlRoot  = 'http://j-archive.com/';
+var reqLimit = 1;
 
 // Remove the original URL from the given link, and return the new, modified URL.
 function rebaseUrl(newUrl, originalUrl) {
@@ -20,20 +23,26 @@ function rebaseUrl(newUrl, originalUrl) {
   return newUrl;
 }
 
-function crawlSeasonList(url) {
+function crawlSeason(url, done) {
   function isSeasonPage(href) {
     return href.search(/(^|\/)showseason\.php/) > -1;
   }
 
   xray(url)
     .prepare('fixHref', function(href) { return rebaseUrl(href, url); })
-    .select(['#content a[href] | fixHref'])
-    .run(function(err, linkUrls) {
-      each(linkUrls, function(linkUrl) {
-        if (isSeasonPage(linkUrl)) {
-          console.log('link:', linkUrl);
-        }
-      });
+    .select(['#content table a[href] | fixHref'])
+    .run(function(err, episodeUrls) {
+      console.log('crawled season', url);
+      done();
+    });
+}
+
+function crawlSeasonList(url) {
+  xray(url)
+    .prepare('fixHref', function(href) { return rebaseUrl(href, url); })
+    .select(['#content table a[href] | fixHref'])
+    .run(function(err, seasonUrls) {
+      async.eachLimit(seasonUrls, reqLimit, crawlSeason);
     });
 }
 
