@@ -6,6 +6,7 @@ var xray    = require('x-ray');
 
 var urlRoot  = 'http://j-archive.com/';
 var reqLimit = 1;
+var userAgent = 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.115 Safari/537.36';
 
 // Remove the original URL from the given link, and return the new, modified URL.
 function rebaseUrl(newUrl, originalUrl) {
@@ -47,6 +48,7 @@ function addFinalClue(name, clue, answer) {
 
 function crawlEpisode(url, done) {
   xray(url)
+    .ua(userAgent)
     .select({
       boards: ['.round[html]'],
       final: {
@@ -72,6 +74,7 @@ function crawlSeason(url, done) {
   }
 
   xray(url)
+    .ua(userAgent)
     .prepare('fixHref', function(href) { return rebaseUrl(href, url); })
     .select(['#content table a[href] | fixHref'])
     .run(function(err, episodeUrls) {
@@ -81,6 +84,7 @@ function crawlSeason(url, done) {
 
 function crawlSeasonList(url) {
   xray(url)
+    .ua(userAgent)
     .prepare('fixHref', function(href) { return rebaseUrl(href, url); })
     .select(['#content table a[href] | fixHref'])
     .run(function(err, seasonUrls) {
