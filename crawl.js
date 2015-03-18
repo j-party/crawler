@@ -27,6 +27,8 @@ function rebaseUrl(newUrl, originalUrl) {
 
 // Extracts the correct response from the "toggle(...)" JS.
 function extractAnswer(toggleJs) {
+  if (!toggleJs) { return null; }
+
   // Parse the JS string, and extract the HTML response.
   var matches = toggleJs.match(/toggle\(.*?,.*?,\s*['"](.*?)['"]\)/);
   var html = matches[1];
@@ -40,6 +42,39 @@ function extractAnswer(toggleJs) {
 
   // Return the actual answer.
   return $('.correct_response').text();
+}
+
+function hasMissingClues(clueArray) {
+  return clueArray.indexOf(null) > -1;
+}
+
+function addCluesFromBoard(boardHtml) {
+  // Load the HTML into Cheerio for parsing.
+  var $ = cheerio.load(boardHtml);
+
+  // Loop through the categories, adding the clues & answers.
+  var col, row, box, name, clues, clue, answers, answer;
+  for (col = 0; col < 6; col++) {
+    name = $('td.category').eq(col).find('.category_name').text();
+    clues = [];
+    answers = [];
+
+    for (row = 1; row <= 5; row++) {
+      box = $.root().children().eq(row).children().eq(col);
+      clue = box.find('.clue_text').html();
+      answer = extractAnswer(box.find('div[onmouseover]').attr('onmouseover'));
+      clues.push(clue);
+      answers.push(answer);
+    }
+
+    if (!hasMissingClues(clues)) {
+      addClues(name, clues, answers);
+    }
+  }
+}
+
+function addClues(name, clues, answers) {
+  console.log('adding clues:', name, clues, answers);
 }
 
 function addFinalClue(name, clue, answer) {
@@ -59,6 +94,9 @@ function crawlEpisode(url, done) {
       }
     })
     .run(function(err, data) {
+      async.each(data.boards, function(board) {
+        addCluesFromBoard(board);
+      });
       addFinalClue(
         data.final.name,
         data.final.clue,
@@ -92,4 +130,5 @@ function crawlSeasonList(url) {
     });
 }
 
-crawlSeasonList(urlRoot + 'listseasons.php');
+// crawlSeasonList(urlRoot + 'listseasons.php');
+crawlEpisode('http://www.j-archive.com/showgame.php?game_id=3713', function() {});
