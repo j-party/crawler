@@ -2,6 +2,7 @@
 
 var async   = require('async');
 var cheerio = require('cheerio');
+var he      = require('he');
 var xray    = require('x-ray');
 
 var urlRoot  = 'http://j-archive.com/';
@@ -25,6 +26,9 @@ function rebaseUrl(newUrl, originalUrl) {
   return newUrl;
 }
 
+// Decodes HTML entities into standard text.
+var decode = he.decode;
+
 // Extracts the correct response from the "toggle(...)" JS.
 function extractAnswer(toggleJs) {
   if (!toggleJs) { return null; }
@@ -40,8 +44,11 @@ function extractAnswer(toggleJs) {
   // Load the HTML into Cheerio for more parsing.
   var $ = cheerio.load(html);
 
-  // Return the actual answer.
-  return $('.correct_response').text();
+  // Get the text content.
+  var text = $('.correct_response').text();
+
+  // Decode the HTML entities.
+  return decode(text);
 }
 
 function hasMissingClues(clueArray) {
@@ -61,7 +68,7 @@ function addCluesFromBoard(boardHtml) {
 
     for (row = 1; row <= 5; row++) {
       box = $.root().children().eq(row).children().eq(col);
-      clue = box.find('.clue_text').html();
+      clue = decode(box.find('.clue_text').text());
       answer = extractAnswer(box.find('div[onmouseover]').attr('onmouseover'));
       clues.push(clue);
       answers.push(answer);
@@ -99,7 +106,7 @@ function crawlEpisode(url, done) {
       });
       addFinalClue(
         data.final.name,
-        data.final.clue,
+        decode(data.final.clue),
         extractAnswer(data.final.mouseover)
       );
       done();
