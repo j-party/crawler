@@ -2,12 +2,13 @@
 
 var async   = require('async');
 var cheerio = require('cheerio');
+var config  = require('config');
 var he      = require('he');
 var xray    = require('x-ray');
 
-var urlRoot  = 'http://j-archive.com/';
-var reqLimit = 1;
-var userAgent = 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.115 Safari/537.36';
+var urlRoot   = 'http://j-archive.com/';
+var reqLimit  = config.get('reqLimit');
+var userAgent = config.get('userAgent');
 
 // Remove the original URL from the given link, and return the new, modified URL.
 function rebaseUrl(newUrl, originalUrl) {

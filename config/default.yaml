@@ -1,0 +1,5 @@
+# Default configuration for the crawler.
+# Create a local.yaml file in the same folder to override these values.
+dbFile: ./clues.db
+reqLimit: 1
+userAgent: Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko
