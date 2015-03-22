@@ -6,6 +6,8 @@ var config  = require('config');
 var he      = require('he');
 var xray    = require('x-ray');
 
+var db = require('./lib/db')();
+
 var urlRoot   = 'http://j-archive.com/';
 var reqLimit  = config.get('reqLimit');
 var userAgent = config.get('userAgent');
@@ -82,11 +84,23 @@ function addCluesFromBoard(boardHtml) {
 }
 
 function addClues(name, clues, answers) {
-  console.log('adding clues:', name, clues, answers);
+  var data = [];
+  clues.forEach(function(clue, i) {
+    data.push({
+      level: i,
+      clue: clue,
+      answer: answers[i]
+    });
+  });
+  db.addClues(name, data);
 }
 
 function addFinalClue(name, clue, answer) {
-  console.log('adding FJ clue:', name, clue, answer);
+  db.addClues(name, [{
+    level: db.FINAL_CLUE,
+    clue: clue,
+    answer: answer
+  }]);
 }
 
 function crawlEpisode(url, done) {
@@ -139,4 +153,4 @@ function crawlSeasonList(url) {
 }
 
 // crawlSeasonList(urlRoot + 'listseasons.php');
-crawlEpisode('http://www.j-archive.com/showgame.php?game_id=3713', function() {});
+crawlEpisode('http://www.j-archive.com/showgame.php?game_id=3713', db.shutdown);
