@@ -53,7 +53,7 @@ function extractAnswer(toggleJs) {
 }
 
 function hasMissingClues(clueArray) {
-  return clueArray.indexOf(null) > -1;
+  return clueArray.indexOf(null) > -1 || clueArray.indexOf('') > -1;
 }
 
 function addCluesFromBoard(boardHtml) {
