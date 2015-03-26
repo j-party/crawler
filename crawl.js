@@ -59,7 +59,7 @@ function hasMissingClues(clueArray) {
   return clueArray.indexOf(null) > -1 || clueArray.indexOf('') > -1;
 }
 
-function addCluesFromBoard(boardHtml) {
+function addCluesFromBoard(sourceId, boardHtml) {
   // Load the HTML into Cheerio for parsing.
   var $ = cheerio.load(boardHtml);
 
@@ -79,12 +79,12 @@ function addCluesFromBoard(boardHtml) {
     }
 
     if (!hasMissingClues(clues)) {
-      addClues(name, clues, answers);
+      addClues(sourceId, name, clues, answers);
     }
   }
 }
 
-function addClues(name, clues, answers) {
+function addClues(sourceId, name, clues, answers) {
   log.debug('Adding clues for category ' + name);
   var data = [];
   clues.forEach(function(clue, i) {
@@ -94,12 +94,12 @@ function addClues(name, clues, answers) {
       answer: answers[i]
     });
   });
-  db.addClues(name, data);
+  db.addClues(sourceId, name, data);
 }
 
-function addFinalClue(name, clue, answer) {
+function addFinalClue(sourceId, name, clue, answer) {
   log.debug('Adding clues for final category ' + name);
-  db.addClues(name, [{
+  db.addClues(sourceId, name, [{
     level: db.FINAL_CLUE,
     clue: clue,
     answer: answer
@@ -120,15 +120,18 @@ function crawlEpisode(url, done) {
       }
     })
     .run(function(err, data) {
-      async.each(data.boards, function(board) {
-        addCluesFromBoard(board);
+      db.addSource(url).then(function(sourceId) {
+        async.each(data.boards, function(board) {
+          addCluesFromBoard(sourceId, board);
+        });
+        addFinalClue(
+          sourceId,
+          data.final.name,
+          decode(data.final.clue),
+          extractAnswer(data.final.mouseover)
+        );
+        done();
       });
-      addFinalClue(
-        data.final.name,
-        decode(data.final.clue),
-        extractAnswer(data.final.mouseover)
-      );
-      done();
     });
 }
 
