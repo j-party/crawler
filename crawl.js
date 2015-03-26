@@ -85,6 +85,7 @@ function addCluesFromBoard(boardHtml) {
 }
 
 function addClues(name, clues, answers) {
+  log.debug('Adding clues for category ' + name);
   var data = [];
   clues.forEach(function(clue, i) {
     data.push({
@@ -97,6 +98,7 @@ function addClues(name, clues, answers) {
 }
 
 function addFinalClue(name, clue, answer) {
+  log.debug('Adding clues for final category ' + name);
   db.addClues(name, [{
     level: db.FINAL_CLUE,
     clue: clue,
@@ -105,6 +107,7 @@ function addFinalClue(name, clue, answer) {
 }
 
 function crawlEpisode(url, done) {
+  log.info('Crawling episode ' + url);
   xray(url)
     .ua(userAgent)
     .select({
@@ -130,6 +133,7 @@ function crawlEpisode(url, done) {
 }
 
 function crawlSeason(url, done) {
+  log.info('Crawling season ' + url);
   function isSeasonPage(href) {
     return href.search(/(^|\/)showseason\.php/) > -1;
   }
@@ -144,6 +148,7 @@ function crawlSeason(url, done) {
 }
 
 function crawlSeasonList(url) {
+  log.info('Crawling seasons ' + url);
   xray(url)
     .ua(userAgent)
     .prepare('fixHref', function(href) { return rebaseUrl(href, url); })
