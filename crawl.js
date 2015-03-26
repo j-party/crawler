@@ -6,7 +6,8 @@ var config  = require('config');
 var he      = require('he');
 var xray    = require('x-ray');
 
-var db = require('./lib/db')();
+var db  = require('./lib/db')();
+var log = require('./lib/log');
 
 var urlRoot   = 'http://j-archive.com/';
 var reqLimit  = config.get('reqLimit');
@@ -153,4 +154,8 @@ function crawlSeasonList(url) {
 }
 
 // crawlSeasonList(urlRoot + 'listseasons.php');
-crawlEpisode('http://www.j-archive.com/showgame.php?game_id=3713', db.shutdown);
+log.info('Starting crawler...');
+crawlEpisode('http://www.j-archive.com/showgame.php?game_id=3713', function() {
+  log.info('Done.');
+  db.shutdown();
+});
