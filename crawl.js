@@ -3,6 +3,7 @@
 var async   = require('async');
 var cheerio = require('cheerio');
 var config  = require('config');
+var hash    = require('hash.js');
 var he      = require('he');
 var xray    = require('x-ray');
 
@@ -111,6 +112,7 @@ function crawlEpisode(url, done) {
   xray(url)
     .ua(userAgent)
     .select({
+      content: '#content',
       boards: ['.round[html]'],
       final: {
         $root: '.final_round',
@@ -120,7 +122,8 @@ function crawlEpisode(url, done) {
       }
     })
     .run(function(err, data) {
-      db.addSource(url).then(function(sourceId) {
+      var fingerprint = hash.sha256().update('abc').digest('hex');
+      db.addSource(url, fingerprint).then(function(sourceId) {
         async.each(data.boards, function(board) {
           addCluesFromBoard(sourceId, board);
         });
