@@ -133,8 +133,9 @@ function crawlEpisode(url, done) {
           decode(data.final.clue),
           extractAnswer(data.final.mouseover)
         );
-        done();
-      });
+      }).fail(function() {
+        log.debug('... episode is unchanged');
+      }).fin(done);
     });
 }
 
