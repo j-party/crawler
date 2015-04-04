@@ -5,31 +5,12 @@ var cheerio = require('cheerio');
 var config  = require('config');
 var hash    = require('hash.js');
 var he      = require('he');
-var xray    = require('x-ray');
 
-var db  = require('./lib/db')();
-var log = require('./lib/log');
+var crawl = require('./lib/crawler');
+var db    = require('./lib/db')();
+var log   = require('./lib/log');
 
-var urlRoot   = 'http://j-archive.com/';
 var reqLimit  = config.get('reqLimit');
-var userAgent = config.get('userAgent');
-
-// Remove the original URL from the given link, and return the new, modified URL.
-function rebaseUrl(newUrl, originalUrl) {
-  var originalRegexp = new RegExp('^' + originalUrl + '(/?)');
-
-  // Strip the original URL prefix.
-  if (originalRegexp.test(newUrl)) {
-    newUrl = newUrl.replace(originalRegexp, '');
-  }
-
-  // Add the root URL on relative links.
-  if (newUrl.search(/^http(s?):\/\//) === -1) {
-    newUrl = urlRoot + newUrl;
-  }
-
-  return newUrl;
-}
 
 // Decodes HTML entities into standard text.
 var decode = he.decode;
@@ -109,34 +90,32 @@ function addFinalClue(sourceId, name, clue, answer) {
 
 function crawlEpisode(url, done) {
   log.info('Crawling episode ' + url);
-  xray(url)
-    .ua(userAgent)
-    .select({
-      content: '#content',
-      boards: ['.round[html]'],
-      final: {
-        $root: '.final_round',
-        name: '.category_name',
-        clue: '.clue_text',
-        mouseover: 'div[onmouseover]'
-      }
-    })
-    .run(function(err, data) {
-      var fingerprint = hash.sha256().update('abc').digest('hex');
-      db.addSource(url, fingerprint).then(function(sourceId) {
-        async.each(data.boards, function(board) {
-          addCluesFromBoard(sourceId, board);
-        });
-        addFinalClue(
-          sourceId,
-          data.final.name,
-          decode(data.final.clue),
-          extractAnswer(data.final.mouseover)
-        );
-      }).fail(function() {
-        log.debug('... episode is unchanged');
-      }).fin(done);
-    });
+  var selectors = {
+    content: '#content',
+    boards: ['.round[html]'],
+    final: {
+      $root: '.final_round',
+      name: '.category_name',
+      clue: '.clue_text',
+      mouseover: 'div[onmouseover]'
+    }
+  };
+  crawl(url, selectors).then(function(data) {
+    var fingerprint = hash.sha256().update('abc').digest('hex');
+    db.addSource(url, fingerprint).then(function(sourceId) {
+      async.each(data.boards, function(board) {
+        addCluesFromBoard(sourceId, board);
+      });
+      addFinalClue(
+        sourceId,
+        data.final.name,
+        decode(data.final.clue),
+        extractAnswer(data.final.mouseover)
+      );
+    }).fail(function() {
+      log.debug('... episode is unchanged');
+    }).fin(done);
+  });
 }
 
 function crawlSeason(url, done) {
@@ -145,29 +124,27 @@ function crawlSeason(url, done) {
     return href.search(/(^|\/)showseason\.php/) > -1;
   }
 
-  xray(url)
-    .ua(userAgent)
-    .prepare('fixHref', function(href) { return rebaseUrl(href, url); })
-    .select(['#content table a[href] | fixHref'])
-    .run(function(err, episodeUrls) {
-      async.eachLimit(episodeUrls, reqLimit, crawlEpisode, done);
-    });
+  var selectors = {
+    episodeUrls: ['#content table a[href] | fixHref']
+  };
+  crawl(url, selectors).then(function(data) {
+    async.eachLimit(data.episodeUrls, reqLimit, crawlEpisode, done);
+  });
 }
 
 function crawlSeasonList(url) {
   log.info('Crawling seasons ' + url);
-  xray(url)
-    .ua(userAgent)
-    .prepare('fixHref', function(href) { return rebaseUrl(href, url); })
-    .select(['#content table a[href] | fixHref'])
-    .run(function(err, seasonUrls) {
-      async.eachLimit(seasonUrls, reqLimit, crawlSeason);
-    });
+  var selectors = {
+    seasonUrls: ['#content table a[href] | fixHref']
+  };
+  crawl(url, selectors).then(function(data) {
+    async.eachLimit(data.seasonUrls, reqLimit, crawlSeason);
+  });
 }
 
 // crawlSeasonList(urlRoot + 'listseasons.php');
 log.info('Starting crawler...');
-crawlEpisode('http://www.j-archive.com/showgame.php?game_id=3713', function() {
+crawlEpisode('http://www.j-archive.com/showgame.php?game_id=3715', function() {
   log.info('Done.');
   db.shutdown();
 });
