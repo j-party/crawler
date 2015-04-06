@@ -138,9 +138,8 @@ function crawlSeasonList(url) {
   });
 }
 
-// crawlSeasonList(urlRoot + 'listseasons.php');
 log.info('Starting crawler...');
-crawlEpisode('http://www.j-archive.com/showgame.php?game_id=3715', function() {
+crawlSeasonList('http://j-archive.com/listseasons.php', function() {
   log.info('Done.');
   db.shutdown();
 });
