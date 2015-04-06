@@ -41,6 +41,19 @@ function hasMissingClues(clueArray) {
   return clueArray.indexOf(null) > -1 || clueArray.indexOf('') > -1;
 }
 
+function addClues(sourceId, name, clues, answers) {
+  log.debug('Adding clues for category ' + name);
+  var data = [];
+  clues.forEach(function(clue, i) {
+    data.push({
+      level: i,
+      clue: clue,
+      answer: answers[i]
+    });
+  });
+  db.addClues(sourceId, name, data);
+}
+
 function addCluesFromBoard(sourceId, boardHtml) {
   // Load the HTML into Cheerio for parsing.
   var $ = cheerio.load(boardHtml);
@@ -64,19 +77,6 @@ function addCluesFromBoard(sourceId, boardHtml) {
       addClues(sourceId, name, clues, answers);
     }
   }
-}
-
-function addClues(sourceId, name, clues, answers) {
-  log.debug('Adding clues for category ' + name);
-  var data = [];
-  clues.forEach(function(clue, i) {
-    data.push({
-      level: i,
-      clue: clue,
-      answer: answers[i]
-    });
-  });
-  db.addClues(sourceId, name, data);
 }
 
 function addFinalClue(sourceId, name, clue, answer) {
@@ -120,10 +120,6 @@ function crawlEpisode(url, done) {
 
 function crawlSeason(url, done) {
   log.info('Crawling season ' + url);
-  function isSeasonPage(href) {
-    return href.search(/(^|\/)showseason\.php/) > -1;
-  }
-
   var selectors = {
     episodeUrls: ['#content table a[href] | fixHref']
   };
