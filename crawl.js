@@ -118,14 +118,23 @@ function crawlEpisode(url, done) {
   });
 }
 
+function isEpisodePage(href) {
+  return href.search(/(^|\/)showgame\.php/) > -1;
+}
+
 function crawlSeason(url, done) {
   log.info('Crawling season ' + url);
   var selectors = {
     episodeUrls: ['#content table a[href] | fixHref']
   };
   crawl(url, selectors).then(function(data) {
+    data.episodeUrls = data.episodeUrls.filter(isEpisodePage);
     async.eachLimit(data.episodeUrls, reqLimit, crawlEpisode, done);
   });
+}
+
+function isSeasonPage(href) {
+  return href.search(/(^|\/)showseason\.php/) > -1;
 }
 
 function crawlSeasonList(url) {
@@ -134,6 +143,7 @@ function crawlSeasonList(url) {
     seasonUrls: ['#content table a[href] | fixHref']
   };
   crawl(url, selectors).then(function(data) {
+    data.seasonUrls = data.seasonUrls.filter(isSeasonPage);
     async.eachLimit(data.seasonUrls, reqLimit, crawlSeason);
   });
 }
