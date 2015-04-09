@@ -26,6 +26,41 @@ The crawler can be configured with files in the [`config` folder](config). The `
 
 More info can be found in the [node-config documentation](https://github.com/lorenwest/node-config/wiki/Configuration-Files).
 
+## Database Schema
+
+### sources
+
+The `sources` table contains the crawled webpages.
+
+| Field | Description |
+|-------|-------------|
+| id | primary key |
+| uri | URL of the source |
+| hash | SHA-2 fingerprint |
+
+### categories
+
+The `categories` table contains the clue categories.
+
+| Field | Description |
+|-------|-------------|
+| id | primary key |
+| sourceId | `sources` reference |
+| name | category name |
+
+### clues
+
+The `clues` table contains the clues and their answers.
+
+| Field | Description |
+|-------|-------------|
+| id | primary key |
+| sourceId | `sources` reference |
+| categoryId | `categories` reference |
+| level | difficulty level (`0` through `4`, `999` for final clue) |
+| clue | clue text |
+| answer | answer text |
+
 ## Development
 
 Development uses [gulp](http://gulpjs.com/) to run tests and lint the code:
