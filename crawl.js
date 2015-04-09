@@ -101,7 +101,7 @@ function crawlEpisode(url, done) {
     }
   };
   crawl(url, selectors).then(function(data) {
-    var fingerprint = hash.sha256().update('abc').digest('hex');
+    var fingerprint = hash.sha256().update(data.content).digest('hex');
     db.addSource(url, fingerprint).then(function(sourceId) {
       async.each(data.boards, function(board) {
         addCluesFromBoard(sourceId, board);
