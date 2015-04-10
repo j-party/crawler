@@ -1,4 +1,4 @@
-# J!Party Game
+# J!Party Crawler
 
 This project is the crawler piece of the J!Party collection.
 
