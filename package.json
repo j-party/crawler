@@ -8,10 +8,10 @@
     "url": "http://ericheikes.com/"
   },
   "dependencies": {
-    "async": "^1.2.0",
+    "async": "^1.4.2",
     "chalk": "^1.0.0",
     "cheerio": "^0.18.0",
-    "config": "^1.2.1",
+    "config": "^1.15.0",
     "hash.js": "^1.0.2",
     "he": "^0.5.0",
     "js-yaml": "^3.2.7",
