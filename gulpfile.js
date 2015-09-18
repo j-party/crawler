@@ -5,7 +5,8 @@ var jshint = require('gulp-jshint');
 
 var jsFiles = [
   'crawl.js',
-  'gulpfile.js'
+  'gulpfile.js',
+  'lib/*.js'
 ];
 
 gulp.task('lint', function() {
