@@ -92,12 +92,12 @@ function crawlEpisode(url, done) {
   log.info('Crawling episode ' + url);
   var selectors = {
     content: '#content',
-    boards: ['.round[html]'],
+    boards: ['.round@html'],
     final: {
       $root: '.final_round',
       name: '.category_name',
       clue: '.clue_text',
-      mouseover: 'div[onmouseover]'
+      mouseover: 'div@onmouseover'
     }
   };
   crawl(url, selectors).then(function(data) {
@@ -125,7 +125,7 @@ function isEpisodePage(href) {
 function crawlSeason(url, done) {
   log.info('Crawling season ' + url);
   var selectors = {
-    episodeUrls: ['#content table a[href] | fixHref']
+    episodeUrls: ['#content table a@href']
   };
   crawl(url, selectors).then(function(data) {
     data.episodeUrls = data.episodeUrls.filter(isEpisodePage);
@@ -140,7 +140,7 @@ function isSeasonPage(href) {
 function crawlSeasonList(url) {
   log.info('Crawling seasons ' + url);
   var selectors = {
-    seasonUrls: ['#content table a[href] | fixHref']
+    seasonUrls: ['#content table a@href']
   };
   crawl(url, selectors).then(function(data) {
     data.seasonUrls = data.seasonUrls.filter(isSeasonPage);
