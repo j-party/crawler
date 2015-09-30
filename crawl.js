@@ -51,7 +51,7 @@ function addClues(sourceId, name, clues, answers) {
       answer: answers[i]
     });
   });
-  db.addClues(sourceId, name, data);
+  return db.addClues(sourceId, name, data);
 }
 
 function addCluesFromBoard(sourceId, boardHtml) {
@@ -81,7 +81,7 @@ function addCluesFromBoard(sourceId, boardHtml) {
 
 function addFinalClue(sourceId, name, clue, answer) {
   log.debug('Adding clues for final category ' + name);
-  db.addClues(sourceId, name, [{
+  return db.addClues(sourceId, name, [{
     level: db.FINAL_CLUE,
     clue: clue,
     answer: answer
@@ -100,9 +100,9 @@ function crawlEpisode(url, done) {
       mouseover: 'div@onmouseover'
     }
   };
-  crawl(url, selectors).then(function(data) {
+  return crawl(url, selectors).then(function(data) {
     var fingerprint = hash.sha256().update(data.content).digest('hex');
-    db.addSource(url, fingerprint).then(function(sourceId) {
+    return db.addSource(url, fingerprint).then(function(sourceId) {
       async.each(data.boards, function(board) {
         addCluesFromBoard(sourceId, board);
       });
@@ -127,7 +127,7 @@ function crawlSeason(url, done) {
   var selectors = {
     episodeUrls: ['#content table a@href']
   };
-  crawl(url, selectors).then(function(data) {
+  return crawl(url, selectors).then(function(data) {
     data.episodeUrls = data.episodeUrls.filter(isEpisodePage);
     async.eachLimit(data.episodeUrls, reqLimit, crawlEpisode, done);
   });
@@ -142,7 +142,7 @@ function crawlSeasonList(url) {
   var selectors = {
     seasonUrls: ['#content table a@href']
   };
-  crawl(url, selectors).then(function(data) {
+  return crawl(url, selectors).then(function(data) {
     data.seasonUrls = data.seasonUrls.filter(isSeasonPage);
     async.eachLimit(data.seasonUrls, reqLimit, crawlSeason);
   });
@@ -152,4 +152,4 @@ log.info('Starting crawler...');
 crawlSeasonList('http://j-archive.com/listseasons.php', function() {
   log.info('Done.');
   db.shutdown();
-});
+}).catch(log.error.bind(log));
