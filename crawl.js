@@ -93,12 +93,7 @@ function crawlEpisode(url, done) {
   var selectors = {
     content: '#content',
     boards: ['.round@html'],
-    final: {
-      $root: '.final_round',
-      name: '.category_name',
-      clue: '.clue_text',
-      mouseover: 'div@onmouseover'
-    }
+    final: '.final_round@html'
   };
   return crawl(url, selectors).then(function(data) {
     var fingerprint = hash.sha256().update(data.content).digest('hex');
@@ -106,11 +101,13 @@ function crawlEpisode(url, done) {
       async.each(data.boards, function(board) {
         addCluesFromBoard(sourceId, board);
       });
+
+      var $ = cheerio.load(data.final);
       addFinalClue(
         sourceId,
-        data.final.name,
-        decode(data.final.clue),
-        extractAnswer(data.final.mouseover)
+        $('.category_name').text(),
+        decode($('.clue_text').text()),
+        extractAnswer($('div[onmouseover]').attr('onmouseover'))
       );
     }).fail(function() {
       log.debug('... episode is unchanged');
